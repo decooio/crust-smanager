@@ -8,7 +8,6 @@
 import { AppContext } from '../types/context';
 import { Task } from '../types/tasks';
 import { createChildLogger } from '../utils/logger';
-import { createDbIndexer } from './chain-db-indexer';
 import { createChainTimeIndexer } from './chain-time-indexer';
 import { createLatestIndexer } from './latest-indexer';
 
@@ -22,7 +21,6 @@ export async function createIndexingTasks(
 
   logger.info('creating indexing tasks');
   const timestampIndexer = await createChainTimeIndexer(context, logger);
-  const dbIndexer = await createDbIndexer(context, logger);
   const latestIndexer = await createLatestIndexer(context, logger);
-  return [timestampIndexer, dbIndexer, latestIndexer];
+  return [timestampIndexer, latestIndexer];
 }

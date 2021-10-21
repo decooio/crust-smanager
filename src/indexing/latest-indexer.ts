@@ -30,7 +30,8 @@ export async function createLatestIndexer(
     onTick: async (block) => {
       const hash = await api.getBlockHash(block);
       const [newFiles, closedFiles] =
-        await api.parseNewFilesAndClosedFilesByBlock(hash.toString());
+        await api.parseNewFilesAndClosedFilesByBlock(hash.toString(),
+          context.config.networkId);
       logger.debug(
         'handling %d new files, %d closed files',
         newFiles.length,

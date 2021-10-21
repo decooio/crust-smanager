@@ -52,6 +52,7 @@ export interface SManagerConfig {
   dataDir: string;
   scheduler: SchedulerConfig;
   sealCoordinator?: SealCoordinatorConfig;
+  networkId: string;
 }
 
 export interface NormalizedSchedulerConfig extends SchedulerConfig {

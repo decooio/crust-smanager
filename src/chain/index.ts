@@ -22,6 +22,7 @@ export interface FileInfo {
   expiredAt: number | null;
   replicas: number | null;
   owner: string | null;
+  networkId: string | null;
 }
 
 export type MarketFileInfo = typeof crustTypes.market.types.FileInfo;
@@ -258,6 +259,7 @@ export default class CrustApi {
    */
   async parseNewFilesAndClosedFilesByBlock(
     bh: string,
+    networkId: string,
   ): Promise<[FileInfo[], string[]]> {
     await this.withApiReady();
     try {
@@ -280,9 +282,22 @@ export default class CrustApi {
           const ex = exs[exIdx];
 
           // b. Parse new file, continue with parsing error
-          newFiles.push(
-            this.parseFileInfo(ex, hexToString(data[1].toString())),
-          );
+          if (ex.method.args.length === 4) {
+            const memoStr = hexToString(ex.method.args[3].toString());
+            let memoJson;
+            try {
+              memoJson = JSON.parse(memoStr);
+              logger.info(`memo: ${memoStr} networkId: ${networkId}`);
+              if (memoJson && networkId === memoJson.networkId) {
+                newFiles.push(
+                  this.parseFileInfo(ex, hexToString(data[1].toString()), networkId),
+                );
+              }
+            } catch (parseErr) {
+              logger.error(`💥 Parse memo error at block(${bh}): ${parseErr}`);
+              continue;
+            }
+          }
         } else if (method === 'CalculateSuccess') {
           if (data.length !== 1) continue; // data should be like [MerkleRoot]
 
@@ -345,7 +360,7 @@ export default class CrustApi {
     }
   }
 
-  private parseFileInfo(ex: Extrinsic, cid: string): FileInfo {
+  private parseFileInfo(ex: Extrinsic, cid: string, networkId: string): FileInfo {
     const exData = ex.method.args as any; // eslint-disable-line
     return {
       cid,
@@ -355,6 +370,7 @@ export default class CrustApi {
       owner: ex.signer.toString(),
       expiredAt: 0,
       replicas: 0,
+      networkId: networkId,
     };
   }
 }

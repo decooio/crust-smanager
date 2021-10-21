@@ -218,7 +218,7 @@ async function getOneFileByStrategy(
 ): Promise<FileRecord | null> {
   const { strategy } = options;
   do {
-    const record = await getPendingFile(fileOrderOps, options);
+    const record = await getPendingFile(fileOrderOps, options, context.config.networkId);
     if (!record) {
       return null;
     }
@@ -287,6 +287,7 @@ async function getFreeSpace(context: AppContext): Promise<[number, number]> {
 async function getPendingFile(
   fileOrderOps: DbOrderOperator,
   sealOptions: SealOption,
+  networkId: string,
 ): DbResult<FileRecord> {
   const { strategy, sealLarge, sealSmall } = sealOptions;
   if (sealLarge) {
@@ -294,31 +295,28 @@ async function getPendingFile(
       fileOrderOps,
       strategy,
       false,
+      networkId
     );
     if (record) {
       return record;
     }
 
-    return await getPendingFileByStrategy(fileOrderOps, strategy, true);
+    return await getPendingFileByStrategy(fileOrderOps, strategy, true, networkId);
   }
 
   if (sealSmall) {
-    return getPendingFileByStrategy(fileOrderOps, strategy, true);
+    return getPendingFileByStrategy(fileOrderOps, strategy, true, networkId);
   }
   return null;
 }
 
 async function getPendingFileByStrategy(
   fileOrderOps: DbOrderOperator,
-  strategy: PullingStrategy,
+  _: PullingStrategy,
   smallFile: boolean,
+  networkId: string
 ): DbResult<FileRecord> {
-  switch (strategy) {
-    case 'newFilesWeight':
-      return fileOrderOps.getPendingFileRecord('chainEvent', smallFile);
-    case 'dbFilesWeight':
-      return fileOrderOps.getPendingFileRecord('dbScan', smallFile);
-  }
+  return fileOrderOps.getPendingFileRecord('chainEvent', smallFile, networkId);
 }
 
 async function sealFile(

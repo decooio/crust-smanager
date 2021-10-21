@@ -68,6 +68,7 @@ export interface DbOrderOperator {
   getPendingFileRecord: (
     indexer: Indexer | null,
     smallFile: boolean,
+    networkId: string | null,
   ) => DbResult<FileRecord>;
 }
 

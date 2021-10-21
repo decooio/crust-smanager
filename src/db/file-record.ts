@@ -23,7 +23,7 @@ export function createFileOrderOperator(db: Database): DbOrderOperator {
     indexer: string,
   ): Promise<FileRecord[]> => {
     const records = await db.all(
-      'select id, cid, expire_at, size, amount, replicas, indexer, status, last_updated, create_at from file_record where cid in (?) and indexer = ?',
+      'select id, cid, expire_at, size, amount, replicas, indexer, status, last_updated, create_at, network_id from file_record where cid in (?) and indexer = ?',
       [cids, indexer],
     );
     return records;
@@ -32,8 +32,8 @@ export function createFileOrderOperator(db: Database): DbOrderOperator {
   const addFileRecord = async (info: FileInfo, indexer: Indexer) => {
     await db.run(
       'insert into file_record ' +
-        '(`cid`, `expire_at`, `size`, `amount`, `replicas`, `indexer`, `status`, `last_updated`, `create_at`)' +
-        ' values (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        '(`cid`, `expire_at`, `size`, `amount`, `replicas`, `indexer`, `status`, `last_updated`, `create_at`, `network_id`)' +
+        ' values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         info.cid,
         info.expiredAt,
@@ -44,6 +44,7 @@ export function createFileOrderOperator(db: Database): DbOrderOperator {
         'new',
         getTimestamp(),
         getTimestamp(),
+        info.networkId
       ],
     );
   };
@@ -178,6 +179,7 @@ export function createFileOrderOperator(db: Database): DbOrderOperator {
   const getPendingFileRecord = async (
     indexer: Indexer | null,
     smallFile: boolean,
+    networkId: string,
   ): DbResult<FileRecord> => {
     const sizeCond = smallFile
       ? ` size < ${LargeFileSize} `
@@ -185,15 +187,16 @@ export function createFileOrderOperator(db: Database): DbOrderOperator {
     if (indexer === null) {
       return db.get(
         `select id, cid, expire_at, size, amount, replicas,
-         indexer, status, last_updated, create_at
-         from file_record where status = "new" and ${sizeCond} order by amount desc, id asc limit 1`,
+         indexer, status, last_updated, create_at, network_id
+         from file_record where status = "new" and ${sizeCond} and network_id = ? order by amount desc, id asc limit 1`,
+        [networkId]
       );
     }
     return db.get(
       `select id, cid, expire_at, size, amount, replicas,
-      indexer, status, last_updated, create_at
-      from file_record  where indexer = ?  and status = "new" and ${sizeCond} order by amount desc, id asc limit 1`,
-      [indexer],
+      indexer, status, last_updated, create_at, network_id
+      from file_record  where indexer = ?  and status = "new" and ${sizeCond} and network_id = ? order by amount desc, id asc limit 1`,
+      [indexer, networkId],
     );
   };
 
@@ -201,7 +204,7 @@ export function createFileOrderOperator(db: Database): DbOrderOperator {
     addFiles,
     getFileInfo: async (cid, indexer) => {
       const record = await db.get(
-        'select id, cid, expired_at, size, amount, replicas, indexer, status, last_updated, create_at from file_record where cid = ? and indexer = ? limit 1',
+        'select id, cid, expired_at, size, amount, replicas, indexer, status, last_updated, create_at, network_id from file_record where cid = ? and indexer = ? limit 1',
         [cid, indexer],
       );
       return record || null;

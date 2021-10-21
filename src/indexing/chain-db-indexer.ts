@@ -180,6 +180,7 @@ async function indexOneFile(
     owner: null,
     replicas: fileInfo.reported_replica_count,
     expiredAt: fileInfo.expired_at,
+    networkId: null,
   };
   return fileRecord;
 }

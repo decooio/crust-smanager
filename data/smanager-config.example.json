@@ -1,4 +1,5 @@
 {
+  "networkId": "",
   "chain": {
     "account": "crustaccount",
     "endPoint": "ws://localhost:19944"

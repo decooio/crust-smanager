@@ -60,6 +60,7 @@ const configSchema = Joi.object()
     dataDir: Joi.string().default('data').required(),
     scheduler: schedulerConfig.required(),
     sealCoordinator: sealCoordinatorConfig,
+    networkId: Joi.string().required(),
   })
   .unknown();
 
