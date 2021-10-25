@@ -1,5 +1,10 @@
 # crust-smanager
-sManager (Storage Manager) is a file picking bot which continuously picking and handling files from Crust Network. Node operators can customize this module to implement their own file handling strategy. sManager maintains a local database to help making decision on pulling files.
+
+This is a sample customized version of sManager (Storage Manager) to demonstrate how to build a `private DSM` based on Crust Network. You can check this [wiki page](https://wiki.crust.network/docs/en/buildSmanager#customize-for-private-dsm) for more background information.
+
+Basically, sManager (Storage Manager) is a file picking bot which continuously picks and handles files from Crust Network. It's open for customization to implement ad hoc file handling strategies.
+
+sManager maintains a local database to help making decision on pulling files.
 
 ## Local Database
 The local database stores below information:
@@ -12,24 +17,24 @@ The local database stores below information:
 Checkout [Db Schema](db-schema.md) for the schema details.
 
 ## Components
-sManager was designed to have serveral tasks running independently. Tasks are either scheduled by the block event or by configured intervals. Each task plays as an actor which consumes/produces some information and communicate with other tasks through the db or applicaion context.
+sManager was designed to have several tasks running independently. Tasks are either scheduled by the block event or by configured intervals. Each task plays as an actor which consumes/produces some information and communicate with other tasks through the db or application context.
 
-sManager follows the **Fails Early** priciple which means it will shutdown on any unexpected error. To support this priciple, tasks are designed to be recoverable after application restarts.
+sManager follows the **Fails Early** principle which means it will shutdown on any unexpected error. To support this priciple, tasks are designed to be recoverable after application restarts.
 
 Below are a list of components that sManager has implemented.
 ### Indexers
 Indexers extract information into the local database from various data sources. Currently sManager has implemented below indexers:
-1. **Chain Database Indexer**: indexes file records from the Crust Network on-chain database.
+1. **Chain Database Indexer**: indexes file records from the Crust Network on-chain database. Note, this Indexer is not needed in this `private DSM` version. 
 2. **Chain Event Indexer**: indexes file records by listening latest chain event.
 3. **Chain Time Indexer**: a simple indexer which push the latest block height and it's timestamp to the config table.
 
 ### Simple Tasks
-Simple tasks are speciualized tasks which runs periodly. Currently sManager has implemented below tasks:
+Simple tasks are specialized tasks which runs periodically. Currently sManager has implemented below tasks:
 1. **Group Info Updater**: Update sworker identity information from sworker api.
-2. **Ipfs Gc**: Schedule ipfs gc periodly.
+2. **Ipfs Gc**: Schedule ipfs gc periodically.
 3. **Telemetry Reporting**: Report smanager statistics information to the telemetry server.
 4. **Pull Scheduler**: Schedule file pulling based on configured strategey.
-5. **Seal Status Updater**: Update sealing status periodly.
+5. **Seal Status Updater**: Update sealing status periodically.
 6. **File Retry Task**: Retry pulling if possible.
 7. **File Cleanup Task**: Cleanup deleted files from local filesystem.
 
@@ -70,6 +75,7 @@ Checkout [smanager-config.example.json](data/smanager-config.example.json)
 
 Those config items will be configured in the sManager configuration setup process. The meaning of each item is as follows:
 
+* networkId: your `private DSM` network id. Normally, this could be a self-generated UUID.
 * chain.account: your member account
 * chain.endPoint: your chain endpoint
 * sworker.endPoint: your sWorker endpoint
